@@ -1,301 +1,220 @@
-﻿#include <iostream>
+#include <iostream>
 #include <string>
+using namespace std;
 
-struct Node {
-    std::string data;
-    Node* next;
-    Node* prev;
+struct Page {
+    string url;
+    Page* next;
+    Page* prev;
 
-    Node(const std::string& value) : data(value), next(NULL), prev(NULL) {}
-};
-
-struct DoublyLinkedList {
-    Node* head;
-    Node* tail;
-
-    DoublyLinkedList() : head(NULL), tail(NULL) {}
-
-    void addTail(const std::string& value) {
-        Node* newNode = new Node(value);
-        if (head == NULL) {
-            head = newNode;
-            tail = newNode;
-        }
-        else {
-            newNode->prev = tail;
-            tail->next = newNode;
-            tail = newNode;
-        }
-    }
-
-    std::string display() {
-        std::string result;
-        Node* current = head;
-        while (current != NULL) {
-            result += current->data + "\n";
-            current = current->next;
-        }
-        return result;
-    }
-
-    void clear() {
-        Node* current = head;
-        while (current != NULL) {
-            Node* temp = current;
-            current = current->next;
-            delete temp;
-        }
-        head = NULL;
-        tail = NULL;
-    }
+    Page(const string& url) : url(url), next(nullptr), prev(nullptr) {}
 };
 
 struct Tab {
-    DoublyLinkedList webPages;
-    Node* currentPage;
+    string tabName;
+    Tab* next;
+    Tab* prev;
+    Page* currentPage;
 
-    Tab() : webPages(), currentPage(NULL) {}
-
-    void addWebPage(const std::string& webpage, DoublyLinkedList& history) {
-        webPages.addTail(webpage);
-        history.addTail(webpage);
-        currentPage = webPages.tail;
-    }
-
-    void displayCurrentPage() {
-        if (currentPage) {
-            std::cout << "Current Page: " << currentPage->data << std::endl;
-        }
-        else {
-            std::cout << "No current page available." << std::endl;
-        }
-    }
-
-    void nextPage(DoublyLinkedList& history) {
-        if (currentPage && currentPage->next) {
-            currentPage = currentPage->next;
-            history.addTail(currentPage->data);
-        }
-    }
-
-    void previousPage(DoublyLinkedList& history) {
-        if (currentPage && currentPage->prev) {
-            currentPage = currentPage->prev;
-            history.addTail(currentPage->data);
-        }
-    }
-
-    void addCurrentPageToBookmarks(DoublyLinkedList& bookmarks) {
-        if (currentPage) {
-            bookmarks.addTail(currentPage->data);
-        }
-    }
+    Tab(const string& name) : tabName(name), next(nullptr), prev(nullptr), currentPage(nullptr) {}
 };
 
 struct Window {
-    DoublyLinkedList tabs;
-    DoublyLinkedList history;
-    DoublyLinkedList bookmarks;
-    Tab* currentTab;
+    string windowName;
+    Window* next;
+    Window* prev;
+    Tab* tabList;
 
-    Window() : tabs(), history(), bookmarks(), currentTab(NULL) {}
+    Window(const string& name) : windowName(name), next(nullptr), prev(nullptr), tabList(nullptr) {}
+};
 
-    Tab* addTab(const std::string& tabName) {
-        Tab* newTab = new Tab();
-        tabs.addTail(tabName);
-        currentTab = newTab; 
-        return newTab;
-    }
+struct HistoryEntry {
+    string url;
+    HistoryEntry* next;
+    HistoryEntry* prev;
 
+    HistoryEntry(const string& url) : url(url), next(nullptr), prev(nullptr) {}
+};
 
-    void displayHistory() {
-        std::cout << "Window History:\n" << history.display();
-    }
+struct BookmarkEntry {
+    string url;
+    BookmarkEntry* next;
+    BookmarkEntry* prev;
 
-    void displayBookmarks() {
-        std::cout << "Window Bookmarks:\n" << bookmarks.display();
-    }
-
-    void displayListOfTabs() {
-        std::cout << "Window Tabs:\n" << tabs.display();
-    }
-
-    void clearHistory() {
-        std::cout << "Windows are deleted...\n";
-        history.clear();
-    }
-
-    void clearBookmarks() {
-        std::cout << "Bookmarks are deleted...\n";
-        bookmarks.clear();
-    }
+    BookmarkEntry(const string& url) : url(url), next(nullptr), prev(nullptr) {}
 };
 
 struct Browser {
-    DoublyLinkedList windows;
     Window* currentWindow;
+    Tab* currentTab;
+    int windowCounter;
+    int tabCounter;
+    HistoryEntry* history;
+    BookmarkEntry* bookmark;
 
-    Browser() : windows(), currentWindow(NULL) {}
-
-    Window* addWindow(const std::string& windowName) {
-        Window* newWindow = new Window();
-        windows.addTail(windowName);
-        currentWindow = newWindow; 
-        return newWindow;
+    Browser() : currentWindow(nullptr), currentTab(nullptr), windowCounter(1), tabCounter(1), history(nullptr), bookmark(nullptr) {
+        currentWindow = new Window("Window 1");
+        currentTab = new Tab("Tab 1");
+        currentWindow->tabList = currentTab;
+        currentTab->currentPage = nullptr;
     }
 
-    std::string getCurrentWindowName() {
-        if (currentWindow) {
-            return windows.display();
+    void addWindow() {
+        Window* newWindow = new Window("Window " + to_string(windowCounter++));
+        if (!currentWindow) {
+            currentWindow = newWindow;
+        } else {
+            newWindow->prev = currentWindow;
+            currentWindow->next = newWindow;
+            currentWindow = newWindow;
         }
-        return "No current window.";
+
+        currentTab = new Tab("Tab " + to_string(tabCounter++));
+        currentWindow->tabList = currentTab;
+        currentTab->currentPage = nullptr;
     }
 
-    void displayAllWindows() {
-        std::cout << "All Windows:\n" << windows.display();
+    void addTab() {
+        if (currentWindow) {
+            Tab* newTab = new Tab("Tab " + to_string(tabCounter++));
+            if (!currentWindow->tabList) {
+                currentWindow->tabList = newTab;
+            } else {
+                newTab->prev = currentTab;
+                currentTab->next = newTab;
+            }
+            currentTab = newTab;
+            currentTab->currentPage = nullptr;
+        }
     }
 
-    void deleteClearWindows() {
-        std::cout << "Windows are deleted...\n";
-        windows.clear();
-        currentWindow = NULL;
+    void addPage(const string& url) {
+        if (currentTab) {
+            Page* newPage = new Page(url);
+            if (currentTab->currentPage) {
+                newPage->prev = currentTab->currentPage;
+                currentTab->currentPage->next = newPage;
+            }
+            currentTab->currentPage = newPage;
+
+            if (history) {
+                HistoryEntry* historyEntry = new HistoryEntry(url);
+                if (history->next) {
+                    history->next->prev = historyEntry;
+                }
+                historyEntry->next = history;
+                history = historyEntry;
+            } else {
+                history = new HistoryEntry(url);
+            }
+        }
+    }
+
+    void nextTab() {
+        if (currentTab && currentTab->next) {
+            currentTab = currentTab->next;
+        }
+    }
+
+    void backTab() {
+        if (currentTab && currentTab->prev) {
+            currentTab = currentTab->prev;
+        }
+    }
+
+    void nextWindow() {
+        if (currentWindow && currentWindow->next) {
+            currentWindow = currentWindow->next;
+            currentTab = currentWindow->tabList;
+        }
+    }
+
+    void backWindow() {
+        if (currentWindow && currentWindow->prev) {
+            currentWindow = currentWindow->prev;
+            currentTab = currentWindow->tabList;
+        }
+    }
+
+    void nextPage() {
+        if (currentTab && currentTab->currentPage && currentTab->currentPage->next) {
+            addPageToHistory(currentTab->currentPage->url);
+            currentTab->currentPage = currentTab->currentPage->next;
+        }
+    }
+
+    void backPage() {
+        if (currentTab && currentTab->currentPage && currentTab->currentPage->prev) {
+            addPageToHistory(currentTab->currentPage->url);
+            currentTab->currentPage = currentTab->currentPage->prev;
+        }
+    }
+
+    void addPageToHistory(const string& url) {
+        if (currentTab) {
+            if (history) {
+                HistoryEntry* historyEntry = new HistoryEntry(url);
+                if (history->next) {
+                    history->next->prev = historyEntry;
+                }
+                historyEntry->next = history;
+                history = historyEntry;
+            } else {
+                history = new HistoryEntry(url);
+            }
+        }
+    }
+
+    void addPageToBookmark() {
+        if (currentTab && currentTab->currentPage) {
+            string url = currentTab->currentPage->url;
+            if (bookmark) {
+                BookmarkEntry* bookmarkEntry = new BookmarkEntry(url);
+                if (bookmark->next) {
+                    bookmark->next->prev = bookmarkEntry;
+                }
+                bookmarkEntry->next = bookmark;
+                bookmark = bookmarkEntry;
+            } else {
+                bookmark = new BookmarkEntry(url);
+            }
+        }
+    }
+
+    void showBookmarks() {
+        BookmarkEntry* current = bookmark;
+        cout << "Bookmarks:" << endl;
+        while (current) {
+            cout << "  - " << current->url << endl;
+            current = current->next;
+        }
+    }
+
+    void printHistory() {
+        HistoryEntry* current = history;
+        cout << "Browser History:" << endl;
+        while (current) {
+            cout << "  - " << current->url << endl;
+            current = current->next;
+        }
+    }
+
+    void printBrowser() {
+        if (currentWindow) {
+            cout << "Current Window: " << currentWindow->windowName << endl;
+            if (currentTab) {
+                cout << "  Current Tab: " << currentTab->tabName << endl;
+                if (currentTab->currentPage) {
+                    cout << "    - Page: " << currentTab->currentPage->url << endl;
+                }
+            }
+        }
     }
 };
 
-void displayMenuBrowser() {
-    std::cout << "===== Menu Browser =====" << std::endl;
-    std::cout << "1. Add New Window" << std::endl;
-    std::cout << "2. Add New Tab" << std::endl;
-    std::cout << "3. Add New Page" << std::endl;
-    std::cout << "4. Next Page" << std::endl;
-    std::cout << "5. Previous Page" << std::endl;
-    std::cout << "6. Add Current Page to Bookmarks" << std::endl;
-    std::cout << "7. Display List of Windows" << std::endl;
-    std::cout << "8. Display List of Tabs" << std::endl;
-    std::cout << "9. Display History" << std::endl;
-    std::cout << "10. Display Bookmarks" << std::endl;
-    std::cout << "11. Delete Window" << std::endl;
-    std::cout << "12. Delete History" << std::endl;
-    std::cout << "13. Delete Bookmarks" << std::endl;
-    std::cout << "14. Exit" << std::endl;
-    std::cout << "===== Menu Browser =====" << std::endl;
-}
-
 int main() {
     Browser browser;
-    std::string windowName;
-    std::string tabName;
-    std::string page;
-
-    bool quit = false;
-
-    while (!quit) {
-        int choice;
-        displayMenuBrowser();
-
-        std::cout << "Enter your choice: ";
-        std::cin >> choice;
-
-        switch (choice) {
-        case 1:
-            std::cout << "Enter window name: ";
-            std::cin >> windowName;
-            browser.addWindow(windowName);
-            std::cout << windowName + " has been created!\n";
-            std::cout << "You are on " + windowName + "\n";
-            break;
-
-        case 2:
-            if (browser.currentWindow) {
-                std::cout << "Enter tab name: ";
-                std::cin >> tabName;
-                browser.currentWindow->addTab(tabName);
-                std::cout << "You are on " + windowName + ", tab: " + tabName + "\n";
-            }
-            else std::cout << "Please Add New Window !!!\n";
-            break;
-        case 3:
-
-            if (browser.currentWindow && browser.currentWindow->currentTab) {
-                std::cout << "Enter page URL: ";
-                std::cin >> page;
-                browser.currentWindow->currentTab->addWebPage(page, browser.currentWindow->history);
-                std::cout << "You are on " + windowName + ", tab: " + tabName + " " + page + "\n";
-            }
-            else std::cout << "Please Add New Tab !!!\n";
-            break;
-
-        case 4:
-            if (browser.currentWindow && browser.currentWindow->currentTab) {
-                browser.currentWindow->currentTab->nextPage(browser.currentWindow->history);
-                std::cout << "You are on " + windowName + ", tab: " + tabName + " " + page + "\n";
-
-            }
-            else std::cout << "Please Add New Tab !!!\n";
-            break;
-
-        case 5:
-            if (browser.currentWindow && browser.currentWindow->currentTab) {
-                browser.currentWindow->currentTab->previousPage(browser.currentWindow->history);
-            }
-            else std::cout << "Please Add New Tab !!!\n";
-            break;
-
-        case 6:
-            if (browser.currentWindow && browser.currentWindow->currentTab) {
-                browser.currentWindow->currentTab->addCurrentPageToBookmarks(browser.currentWindow->bookmarks);
-            }
-            else std::cout << "Please Add New Tab !!!\n";
-            break;
-
-        case 7:
-            if (browser.currentWindow) {
-                browser.displayAllWindows();
-            }
-            else std::cout << "Empty \n";
-            break;
-
-        case 8:
-            if (browser.currentWindow && browser.currentWindow->currentTab) {
-                browser.currentWindow->displayListOfTabs();
-            }
-            else std::cout << "Please Add New Tab !!!\n";
-            break;
-
-        case 9:
-            if (browser.currentWindow) {
-                browser.currentWindow->displayHistory();
-            }
-            else std::cout << "Please Add New Window !!!\n";
-            break;
-
-        case 10:
-            if (browser.currentWindow) {
-                browser.currentWindow->displayBookmarks();
-            }
-            else std::cout << "Please Add New Window !!!\n";
-            break;
-        case 11:
-            browser.deleteClearWindows();
-            std::cout << "All windows have been deleted!\n";
-            break;
-
-        case 12:
-            if (browser.currentWindow) {
-                browser.currentWindow->clearHistory();
-            }
-            break;
-
-        case 13:
-            if (browser.currentWindow) {
-                browser.currentWindow->clearBookmarks();
-            }
-            break;        
-
-        case 14:
-            quit = true;
-            break;
-        }
-    }
+	browser.printBrowser();
+	browser.printHistory();
     return 0;
 }
