@@ -2,7 +2,8 @@
 #include <string>
 using namespace std;
 
-struct Page {
+class Page {
+public:
     string url;
     Page* next;
     Page* prev;
@@ -10,7 +11,8 @@ struct Page {
     Page(const string& url) : url(url), next(nullptr), prev(nullptr) {}
 };
 
-struct Tab {
+class Tab {
+public:
     string tabName;
     Tab* next;
     Tab* prev;
@@ -19,7 +21,8 @@ struct Tab {
     Tab(const string& name) : tabName(name), next(nullptr), prev(nullptr), currentPage(nullptr) {}
 };
 
-struct Window {
+class Window {
+public:
     string windowName;
     Window* next;
     Window* prev;
@@ -28,7 +31,8 @@ struct Window {
     Window(const string& name) : windowName(name), next(nullptr), prev(nullptr), tabList(nullptr) {}
 };
 
-struct HistoryEntry {
+class HistoryEntry {
+public:
     string url;
     HistoryEntry* next;
     HistoryEntry* prev;
@@ -36,23 +40,16 @@ struct HistoryEntry {
     HistoryEntry(const string& url) : url(url), next(nullptr), prev(nullptr) {}
 };
 
-struct BookmarkEntry {
-    string url;
-    BookmarkEntry* next;
-    BookmarkEntry* prev;
-
-    BookmarkEntry(const string& url) : url(url), next(nullptr), prev(nullptr) {}
-};
-
-struct Browser {
+class Browser {
+public:
     Window* currentWindow;
     Tab* currentTab;
     int windowCounter;
     int tabCounter;
     HistoryEntry* history;
-    BookmarkEntry* bookmark;
 
-    Browser() : currentWindow(nullptr), currentTab(nullptr), windowCounter(1), tabCounter(1), history(nullptr), bookmark(nullptr) {
+    Browser() : currentWindow(nullptr), currentTab(nullptr), windowCounter(1), tabCounter(1), history(nullptr) {
+        // Khởi tạo ban đầu với một cửa sổ và một tab
         currentWindow = new Window("Window 1");
         currentTab = new Tab("Tab 1");
         currentWindow->tabList = currentTab;
@@ -63,12 +60,14 @@ struct Browser {
         Window* newWindow = new Window("Window " + to_string(windowCounter++));
         if (!currentWindow) {
             currentWindow = newWindow;
-        } else {
+        }
+        else {
             newWindow->prev = currentWindow;
             currentWindow->next = newWindow;
             currentWindow = newWindow;
         }
 
+        // Khởi tạo một tab mới trong cửa sổ mới
         currentTab = new Tab("Tab " + to_string(tabCounter++));
         currentWindow->tabList = currentTab;
         currentTab->currentPage = nullptr;
@@ -79,7 +78,8 @@ struct Browser {
             Tab* newTab = new Tab("Tab " + to_string(tabCounter++));
             if (!currentWindow->tabList) {
                 currentWindow->tabList = newTab;
-            } else {
+            }
+            else {
                 newTab->prev = currentTab;
                 currentTab->next = newTab;
             }
@@ -97,6 +97,7 @@ struct Browser {
             }
             currentTab->currentPage = newPage;
 
+            // Thêm vào lịch sử
             if (history) {
                 HistoryEntry* historyEntry = new HistoryEntry(url);
                 if (history->next) {
@@ -104,7 +105,8 @@ struct Browser {
                 }
                 historyEntry->next = history;
                 history = historyEntry;
-            } else {
+            }
+            else {
                 history = new HistoryEntry(url);
             }
         }
@@ -159,34 +161,10 @@ struct Browser {
                 }
                 historyEntry->next = history;
                 history = historyEntry;
-            } else {
+            }
+            else {
                 history = new HistoryEntry(url);
             }
-        }
-    }
-
-    void addPageToBookmark() {
-        if (currentTab && currentTab->currentPage) {
-            string url = currentTab->currentPage->url;
-            if (bookmark) {
-                BookmarkEntry* bookmarkEntry = new BookmarkEntry(url);
-                if (bookmark->next) {
-                    bookmark->next->prev = bookmarkEntry;
-                }
-                bookmarkEntry->next = bookmark;
-                bookmark = bookmarkEntry;
-            } else {
-                bookmark = new BookmarkEntry(url);
-            }
-        }
-    }
-
-    void showBookmarks() {
-        BookmarkEntry* current = bookmark;
-        cout << "Bookmarks:" << endl;
-        while (current) {
-            cout << "  - " << current->url << endl;
-            current = current->next;
         }
     }
 
@@ -214,7 +192,43 @@ struct Browser {
 
 int main() {
     Browser browser;
-	browser.printBrowser();
-	browser.printHistory();
+
+    cout << "Initial Browser:" << endl;
+    browser.printBrowser();
+    browser.addPage("https://example.com");
+    browser.printBrowser();
+
+    browser.addPage("https://example1.com");
+    browser.printBrowser();
+
+    cout << "Back Page:" << endl;
+    browser.backPage();
+    browser.printBrowser();
+
+    cout << "New tab:" << endl;
+    browser.addTab();
+    browser.printBrowser();
+
+    cout << "Back Page:" << endl;
+    browser.backPage();
+    browser.printBrowser();
+
+    cout << "Back Tab:" << endl;
+    browser.backTab();
+    browser.printBrowser();
+
+    cout << "Next Page:" << endl;
+    browser.nextPage();
+    browser.printBrowser();
+
+    cout << "New window:" << endl;
+    browser.addWindow();
+    browser.printBrowser();
+
+    cout << "Back Window:" << endl;
+    browser.backWindow();
+    browser.printBrowser();
+    browser.printHistory(); // Chưa hợp lí
+
     return 0;
 }
