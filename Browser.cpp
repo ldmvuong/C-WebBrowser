@@ -140,15 +140,15 @@ public:
 
     void nextPage() {
         if (currentTab && currentTab->currentPage && currentTab->currentPage->next) {
-            addPageToHistory(currentTab->currentPage->url);
             currentTab->currentPage = currentTab->currentPage->next;
+            addPageToHistory(currentTab->currentPage->url);
         }
     }
 
     void backPage() {
         if (currentTab && currentTab->currentPage && currentTab->currentPage->prev) {
-            addPageToHistory(currentTab->currentPage->url);
             currentTab->currentPage = currentTab->currentPage->prev;
+            addPageToHistory(currentTab->currentPage->url);
         }
     }
 
@@ -195,40 +195,11 @@ int main() {
 
     cout << "Initial Browser:" << endl;
     browser.printBrowser();
-    browser.addPage("https://example.com");
-    browser.printBrowser();
-
-    browser.addPage("https://example1.com");
-    browser.printBrowser();
-
-    cout << "Back Page:" << endl;
-    browser.backPage();
-    browser.printBrowser();
-
-    cout << "New tab:" << endl;
-    browser.addTab();
-    browser.printBrowser();
-
-    cout << "Back Page:" << endl;
-    browser.backPage();
-    browser.printBrowser();
-
-    cout << "Back Tab:" << endl;
-    browser.backTab();
-    browser.printBrowser();
-
-    cout << "Next Page:" << endl;
-    browser.nextPage();
-    browser.printBrowser();
-
-    cout << "New window:" << endl;
     browser.addWindow();
-    browser.printBrowser();
-
-    cout << "Back Window:" << endl;
     browser.backWindow();
     browser.printBrowser();
-    browser.printHistory(); // Chưa hợp lí
+
+
 
     return 0;
 }
