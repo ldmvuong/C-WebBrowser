@@ -74,7 +74,6 @@ public:
             currentWindow->next = newWindow;
             currentWindow = newWindow;
         }
-
         currentTab = new Tab("Tab " + to_string(tabCounter++));
         currentWindow->tabList = currentTab;
         currentTab->currentPage = nullptr;
@@ -103,7 +102,6 @@ public:
                 currentTab->currentPage->next = newPage;
             }
             currentTab->currentPage = newPage;
-
             if (history) {
                 HistoryEntry* historyEntry = new HistoryEntry(url);
                 if (history->next) {
@@ -219,6 +217,63 @@ public:
         bookmarks = nullptr;
     }
 
+    void removeCurrentWindow() {
+        if (currentWindow) {
+            Page* currentPageToDelete = currentTab->currentPage;
+
+            Window* nextWindow = currentWindow->next;
+            Window* prevWindow = currentWindow->prev;
+
+            Tab* currentTabToDelete = currentTab;
+            if (nextWindow) {
+                currentTab = nextWindow->tabList;
+            }
+            else if (prevWindow) {
+                currentTab = prevWindow->tabList;
+                while (currentTab->next) {
+                    currentTab = currentTab->next;
+                }
+            }
+            else {
+                currentTab = nullptr;
+            }
+
+            if (nextWindow) {
+                nextWindow->prev = prevWindow;
+            }
+            if (prevWindow) {
+                prevWindow->next = nextWindow;
+            }
+
+            delete currentWindow;
+            currentWindow = nextWindow ? nextWindow : prevWindow;
+
+            if (currentTabToDelete) {
+                currentTabToDelete->currentPage = nullptr;
+            }
+        }
+    }
+
+
+
+    void removeCurrentTab() {
+        if (currentTab) {
+            Tab* nextTab = currentTab->next;
+            Tab* prevTab = currentTab->prev;
+
+            if (nextTab) {
+                nextTab->prev = prevTab;
+            }
+
+            if (prevTab) {
+                prevTab->next = nextTab;
+            }
+
+            delete currentTab;
+            currentTab = nextTab ? nextTab : prevTab;
+        }
+    }
+
     void printHistory() {
         HistoryEntry* current = history;
         cout << "Browser History:" << endl;
@@ -243,101 +298,7 @@ public:
 
 int main() {
     Browser browser;
-    int choice;
-    browser.printBrowser();
-    while (true) {
-        cout << "\n=== Simple Browser Menu ===" << endl;
-        cout << "1. Add Window" << endl;
-        cout << "2. Add Tab" << endl;
-        cout << "3. Add Page" << endl;
-        cout << "4. Next Tab" << endl;
-        cout << "5. Back Tab" << endl;
-        cout << "6. Next Window" << endl;
-        cout << "7. Back Window" << endl;
-        cout << "8. Next Page" << endl;
-        cout << "9. Back Page" << endl;
-        cout << "10. Add Bookmark" << endl;
-        cout << "11. Print Bookmarks" << endl;
-        cout << "12. Print Browser" << endl;
-        cout << "13. Print History" << endl;
-        cout << "14. Clear History" << endl;
-        cout << "15. Clear Bookmarks" << endl;
-        cout << "0. Exit" << endl;
-        cout << "Enter your choice: ";
-        cin >> choice;
 
-        switch (choice) {
-        case 1:
-            browser.addWindow();
-            browser.printBrowser();
-            break;
-        case 2:
-            browser.addTab();
-            browser.printBrowser();
-            break;
-        case 3: {
-            string url;
-            cout << "Enter URL: ";
-            cin >> url;
-            browser.addPage(url);
-            browser.printBrowser();
-            break;
-        }
-        case 4:
-            browser.nextTab();
-            browser.printBrowser();
-            break;
-        case 5:
-            browser.backTab();
-            browser.printBrowser();
-            break;
-        case 6:
-            browser.nextWindow();
-            browser.printBrowser();
-            break;
-        case 7:
-            browser.backWindow();
-            browser.printBrowser();
-            break;
-        case 8:
-            browser.nextPage();
-            browser.printBrowser();
-            break;
-        case 9:
-            browser.backPage();
-            browser.printBrowser();
-            break;
-        case 10:
-            browser.addBookmark();
-            browser.printBrowser();
-            browser.printBookmarks();
-            break;
-        case 11:
-            browser.printBrowser();
-            browser.printBookmarks();
-            break;
-        case 12:
-            browser.printBrowser();
-            break;
-        case 13:
-            browser.printBrowser();
-            browser.printHistory();
-            break;
-        case 14:
-            browser.clearHistory();
-            cout << "Deleted !!! /n";
-            break;
-        case 15:
-            browser.clearBookmarks();
-            cout << "Deleted !!! /n";
-            break;
-        case 0:
-            exit(0);
-        default:
-            cout << "Invalid choice. Please try again." << endl;
-            break;
-        }
-    }
 
     return 0;
 }
